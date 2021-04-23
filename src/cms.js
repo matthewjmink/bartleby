@@ -1,7 +1,7 @@
 const { createServer, build } = require('vite');
 const vue = require('@vitejs/plugin-vue');
 const path = require('path');
-const pkgRoot = require('pkg-dir').sync(__dirname);
+const pkgRoot = require('pkg-dir').sync();
 
 const viteConfig = {
     configFile: false,

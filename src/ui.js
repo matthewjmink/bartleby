@@ -5,12 +5,12 @@ const path = require('path');
 const glob = require('glob').sync;
 const bs = require('browser-sync').create();
 const fs = require('fs-extra');
-const sass = require('sass');
 const rollup = require('rollup');
 const rollupReplace = require('@rollup/plugin-replace');
 const { createFilter } = require('@rollup/pluginutils');
+const { nodeResolve } = require('@rollup/plugin-node-resolve');
 const { getSnippets } = require('./db');
-const pkgRoot = require('pkg-dir').sync(__dirname);
+const pkgRoot = require('pkg-dir').sync();
 
 const config = require(path.join(pkgRoot, 'bartleby.config'));
 
@@ -90,6 +90,13 @@ const customTags = {
         return snippet;
     },
 };
+const hooks = {
+    beforeBuild() {},
+    afterCompilePages() {},
+    afterBuildPages() {},
+    afterBuild() {},
+    ...config.hooks,
+};
 
 Object
     .keys(customTags)
@@ -121,19 +128,6 @@ const buildPages = () => {
         fs.ensureFileSync(page.outputPath);
         fs.writeFileSync(page.outputPath, compiledPage);
     });
-};
-
-// TODO: Let the user decide which style framework to use
-const buildSass = () => {
-    const result = sass.renderSync({
-        file: path.join(websiteRoot, 'scss/style.scss'),
-        includePaths: ['node_modules/normalize.css/']
-    });
-    // TODO: add hash to the file name
-    const outputPath = path.join(outputRoot, 'style.css');
-
-    fs.ensureFileSync(outputPath);
-    fs.writeFileSync(outputPath, result.css);
 };
 
 const buildJs = async () => {
@@ -171,6 +165,7 @@ const buildJs = async () => {
     const bundle = await rollup.rollup({
         input: path.join(websiteRoot, 'main.js'),
         plugins: [
+            nodeResolve(),
             rollupReplace({
                 'process.env.BARTLEBY_ROUTE_IMPORTS': routerImports,
                 'process.env.BARTLEBY_ROUTES': routerRoutes,
@@ -214,11 +209,14 @@ const copyStaticAssets = async () => {
 }
 
 const build = async () => {
+    await hooks.beforeBuild();
     compilePages();
+    await hooks.afterCompilePages(pages);
     await buildJs();
     buildPages();
-    buildSass();
+    await hooks.afterBuildPages();
     copyStaticAssets();
+    await hooks.afterBuild();
 };
 
 const bartleby = async (serve) => {
@@ -259,8 +257,8 @@ const bartleby = async (serve) => {
         watchFilesHandler.queue = [];
         watchFilesHandler.timeout = undefined;
 
-        bs.watch(path.join(websiteRoot, '**/*.{scss,html,js}'), { ignoreInitial: true }, watchFilesHandler);
-        bs.watch(path.join(websiteRoot, 'assets', '**/*.{png,jpg}'), { ignoreInitial: true }, copyStaticAssets);
+        bs.watch(path.join(websiteRoot, '**/*.{css,scss,html,js}'), { ignoreInitial: true }, watchFilesHandler);
+        bs.watch(path.join(websiteRoot, 'assets', '**/*.{png,jpg,gif}'), { ignoreInitial: true }, copyStaticAssets);
 
         bs.init({ server: outputRoot });
     }
