@@ -14,7 +14,7 @@ const pkgRoot = require('pkg-dir').sync(__dirname);
 
 const config = require(path.join(pkgRoot, 'bartleby.config'));
 
-const websiteRoot = path.join(pkgRoot, 'website');
+const websiteRoot = path.join(pkgRoot, 'src');
 const pagesRoot = path.join(websiteRoot, 'pages');
 const includesRoot = path.join(websiteRoot, 'includes');
 const outputRoot = path.join(pkgRoot, 'dist');
@@ -123,9 +123,10 @@ const buildPages = () => {
     });
 };
 
+// TODO: Let the user decide which style framework to use
 const buildSass = () => {
     const result = sass.renderSync({
-        file: 'website/scss/style.scss',
+        file: path.join(websiteRoot, 'scss/style.scss'),
         includePaths: ['node_modules/normalize.css/']
     });
     // TODO: add hash to the file name
