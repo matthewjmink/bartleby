@@ -1,5 +1,5 @@
 {
-    "name": "bartleby",
+    "name": "bartleby-cms",
     "version": "0.0.1",
     "description": "A static website generator with built-in CMS",
     "main": "src/bartleby.js",
