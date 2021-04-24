@@ -4,10 +4,10 @@ const cms = require('./cms');
 
 module.exports = {
     serve() {
-        ui(true);
+        ui.serve();
     },
     build() {
-        ui();
+        ui.build();
         cms.build();
     }
 }

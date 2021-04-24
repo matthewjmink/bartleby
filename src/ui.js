@@ -12,7 +12,8 @@ const { nodeResolve } = require('@rollup/plugin-node-resolve');
 const { getSnippets } = require('./db');
 const pkgRoot = require('pkg-dir').sync();
 
-const config = require(path.join(pkgRoot, 'bartleby.config'));
+const projectConfigPath = path.join(pkgRoot, 'bartleby.config.js');
+const projectConfig = fs.existsSync(projectConfigPath) ? require(projectConfigPath) : {};
 
 const websiteRoot = path.join(pkgRoot, 'src');
 const pagesRoot = path.join(websiteRoot, 'pages');
@@ -77,25 +78,25 @@ const createPageFromPath = (inputPath) => {
 const pages = glob(path.join(pagesRoot, '**/*.html')).map(createPageFromPath);
 const env = new nunjucks.Environment(new nunjucks.FileSystemLoader([includesRoot, path.join(websiteRoot, 'assets')]));
 const customTags = {
-    ...config.customTags,
+    ...projectConfig.customTags,
     pageClass() {
         const { url, slug } = this;
         return (url === '/') ? 'page-home' : `page-${slug}`;
-    } ,
+    },
     snippet(snippetKey) {
         const snippet = snippetsByKey.get(snippetKey)
         if (!snippetsByKey.has(snippetKey)) {
-            console.error(`Invalid snippet key "${snippetKey}". Make sure you register your snippet in bartleby.config.js`);
+            console.error(`Invalid snippet key "${snippetKey}". Make sure you register your snippet in the page front matter.`);
         }
         return snippet;
     },
 };
 const hooks = {
-    beforeBuild() {},
-    afterCompilePages() {},
-    afterBuildPages() {},
-    afterBuild() {},
-    ...config.hooks,
+    beforeBuild() { },
+    afterCompilePages() { },
+    afterBuildPages() { },
+    afterBuild() { },
+    ...projectConfig.hooks,
 };
 
 Object
@@ -208,6 +209,13 @@ const copyStaticAssets = async () => {
     fs.copySync(path.join(websiteRoot, 'assets', 'favicon.ico'), path.join(outputRoot, 'favicon.ico'));
 }
 
+const getBuildData = () => {
+    return {
+        pages,
+        snippets: Object.fromEntries(snippetsByKey),
+    }
+}
+
 const build = async () => {
     await hooks.beforeBuild();
     compilePages();
@@ -216,19 +224,27 @@ const build = async () => {
     buildPages();
     await hooks.afterBuildPages();
     copyStaticAssets();
-    await hooks.afterBuild();
+    await hooks.afterBuild(getBuildData());
 };
 
-const bartleby = async (serve) => {
+const init = async () => {
     const snippets = await getSnippets(snippetKeys);
 
     snippets.forEach(({ contentKey, contentValue }) => {
         snippetsByKey.set(contentKey, contentValue);
     });
+};
 
-    await build();
+module.exports = {
+    build: async () => {
+        await init();
+        await build();
+        return getBuildData();
+    },
+    serve: async () => {
+        await init();
+        await build();
 
-    if (serve) {
         const watchFilesHandler = (event, file) => {
             clearTimeout(watchFilesHandler.timeout);
             watchFilesHandler.queue.push({ event, file });
@@ -263,5 +279,3 @@ const bartleby = async (serve) => {
         bs.init({ server: outputRoot });
     }
 };
-
-module.exports = bartleby;
