@@ -236,13 +236,13 @@ const bartleby = async (serve) => {
                 watchFilesHandler.queue.forEach((item) => {
                     if (path.extname(item.file) === '.html' && item.file.includes(pagesRoot)) {
                         const { url } = getPagePathMeta(file);
-                        const pageIndex = pages.findIndex(page => page.url === url);
+                        const pageIndex = pages.findIndex(({ page }) => page.url === url);
                         if (item.event === 'unlink') {
                             pages.splice(pageIndex, 1);
                         } else {
                             const newPage = createPageFromPath(item.file);
                             // Add the new page to the pages array
-                            if (item.event === 'add') pages.push(createPageFromPath(item.file))
+                            if (item.event === 'add') pages.push(createPageFromPath(item.file));
                             // Replace the old page data with the new
                             else pages.splice(pageIndex, 1, newPage);
 
