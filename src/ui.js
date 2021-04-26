@@ -51,11 +51,16 @@ const getPagePathMeta = (inputPath) => {
     };
 };
 
-const registerSnippets = (keys = []) => {
-    keys.forEach((key) => {
+const registerSnippets = (snippets = []) => {
+    snippets.forEach(({ key }) => {
         snippetKeys.add(key);
     });
 };
+
+const normalizeSnippet = (snippet = '') => {
+    const { key, name } = typeof snippet === 'string' ? { key: snippet, name: snippet } : snippet;
+    return { key, name };
+}
 
 const createPageFromPath = (inputPath) => {
     const { content: template, data } = matter(fs.readFileSync(inputPath, 'utf-8'));
@@ -64,14 +69,18 @@ const createPageFromPath = (inputPath) => {
         .split('-')
         .map((part, i) => (i === 0) ? part : `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`)
         .join('');
+    const normalizedSnippets = !data.snippets ? undefined : data.snippets.map(normalizeSnippet);
 
-    registerSnippets(data.snippets);
+    registerSnippets(normalizedSnippets);
 
     return {
         id,
         page,
         template,
-        data,
+        data: {
+            ...data,
+            snippets: normalizedSnippets,
+        },
     };
 };
 
@@ -84,11 +93,12 @@ const customTags = {
         return (url === '/') ? 'page-home' : `page-${slug}`;
     },
     snippet(snippetKey) {
-        const snippet = snippetsByKey.get(snippetKey)
-        if (!snippetsByKey.has(snippetKey)) {
+        if (!snippetKeys.has(snippetKey)) {
             console.error(`Invalid snippet key "${snippetKey}". Make sure you register your snippet in the page front matter.`);
+            console.error(`${this.inputPath}\n`);
+            return '';
         }
-        return snippet;
+        return snippetsByKey.get(snippetKey);
     },
 };
 const hooks = {
