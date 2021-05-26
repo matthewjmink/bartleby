@@ -16,7 +16,7 @@ const {
     pagesRoot,
     includesRoot,
 } = require('./utils');
-const { saveFile, copyDir, copyFile } = require('./file-service');
+const fileService = require('./file-service');
 
 const projectConfigPath = path.join(pkgRoot, 'bartleby.config.js');
 const projectConfig = fs.existsSync(projectConfigPath) ? require(projectConfigPath) : {};
@@ -137,7 +137,7 @@ const buildPages = () => {
             page,
             content: compiledTemplate,
         });
-        saveFile(page.outputPath, compiledPage);
+        fileService.saveFile(page.outputPath, compiledPage);
     });
 };
 
@@ -191,14 +191,14 @@ const buildJs = async () => {
     });
     const { output: [{ code: mainJs }] } = await mainBundle.generate({ format: 'iife' });
 
-    saveFile('main.js', mainJs);
+    fileService.saveFile('main.js', mainJs);
 
     // TODO: Use Promise.all() to build these concurrently
     routerPagesWithJs.forEach(async ({ outputPath, slug, js }) => {
         const bundle = await rollup.rollup({ input: js });
         const { output: [{ code: pageJs }] } = await bundle.generate({ format: 'iife' });
 
-        await saveFile(path.join(path.dirname(outputPath), `${path.basename(slug)}.js`), pageJs);
+        await fileService.saveFile(path.join(path.dirname(outputPath), `${path.basename(slug)}.js`), pageJs);
         await bundle.close();
     });
 
@@ -208,8 +208,8 @@ const buildJs = async () => {
 
 const copyStaticAssets = async () => {
     const assetsRoot = path.join(websiteRoot, 'assets');
-    copyDir(path.join(assetsRoot, 'images'), path.join('assets', 'images'));
-    copyFile(path.join(assetsRoot, 'favicon.ico'), 'favicon.ico');
+    fileService.copyDir(path.join(assetsRoot, 'images'), path.join('assets', 'images'));
+    fileService.copyFile(path.join(assetsRoot, 'favicon.ico'), 'favicon.ico');
 }
 
 const getBuildData = () => {
@@ -220,14 +220,14 @@ const getBuildData = () => {
 }
 
 const build = async () => {
-    await hooks.beforeBuild();
+    await hooks.beforeBuild(fileService);
     compilePages();
-    await hooks.afterCompilePages(pages);
+    await hooks.afterCompilePages(pages, fileService);
     await buildJs();
     buildPages();
-    await hooks.afterBuildPages();
+    await hooks.afterBuildPages(pages, fileService);
     copyStaticAssets();
-    await hooks.afterBuild(getBuildData());
+    await hooks.afterBuild(getBuildData(), fileService);
 };
 
 const init = async () => {

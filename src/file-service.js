@@ -25,7 +25,6 @@ const copyToFileSystem = async (inputPath, outputPath, { recursive = false } = {
 
 module.exports = {
     saveFile: (...args) => {
-        console.log({ isLambda: isLambda() });
         if (isLambda()) return saveToS3(...args);
 
         return saveToFileSystem(...args);
