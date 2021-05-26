@@ -58,7 +58,7 @@ const registerSnippets = (snippets = []) => {
 };
 
 const normalizeSnippet = (snippet = '') => {
-    const { key, name } = typeof snippet === 'string' ? { key: snippet, name: snippet } : snippet;
+    const { key, name } = typeof snippet === 'string' ? { key: snippet } : snippet;
     return { key, name };
 }
 

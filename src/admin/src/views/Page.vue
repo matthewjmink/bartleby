@@ -20,15 +20,15 @@
         </h1>
         <div>
             <h2>Content</h2>
-            <div v-for="snippet in page.snippets" :key="snippet" class="mb-5">
-                <h4>
-                    {{ snippet.name }}
+            <div v-for="snippet in page.snippets" :key="snippet.key" class="mb-5">
+                <div>
+                    <h4 v-if="snippet.name || page.snippets.length > 1">{{ snippet.name || snippet.key }}</h4>
                     <button class="ml-2 btn btn-success btn-sm"
                             v-show="snippetsByKey[snippet.key] !== snippetsByKeyOld[snippet.key]"
                             @click="save(snippet.key)">
                         <icon class="mr-1" name="save" />Save
                     </button>
-                </h4>
+                </div>
                 <editor :id="`editor_${snippet.key}`"
                         api-key="no-api-key"
                         :init="editorConfig"

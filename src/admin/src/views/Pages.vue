@@ -11,7 +11,10 @@
             </thead>
             <tbody>
                 <tr v-for="page in pages" :key="page.id">
-                    <td><router-link :to="`/page/${page.slug}`">{{ page.name }}</router-link></td>
+                    <td>
+                        <router-link :to="`/page/${page.slug}`" v-if="page.snippets">{{ page.name }}</router-link>
+                        <span v-else>{{ page.name }}</span>
+                    </td>
                     <td>{{ page.url }}</td>
                     <td><router-link :to="`/page/${page.slug}`"><icon name="edit" /></router-link></td>
                 </tr>

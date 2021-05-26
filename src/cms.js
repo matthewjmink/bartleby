@@ -20,6 +20,7 @@ const injectWebsiteData = (websiteData) => {
 };
 
 const serveCMS = async (websiteData) => {
+    injectWebsiteData(websiteData);
     const server = await createServer(viteConfig);
     await server.listen();
 };
