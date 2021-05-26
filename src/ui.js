@@ -10,7 +10,7 @@ const rollupReplace = require('@rollup/plugin-replace');
 const { createFilter } = require('@rollup/pluginutils');
 const { nodeResolve } = require('@rollup/plugin-node-resolve');
 const { getSnippets } = require('./db');
-const pkgRoot = require('pkg-dir').sync();
+const pkgRoot = require('pkg-dir').sync(process.cwd());
 
 const projectConfigPath = path.join(pkgRoot, 'bartleby.config.js');
 const projectConfig = fs.existsSync(projectConfigPath) ? require(projectConfigPath) : {};

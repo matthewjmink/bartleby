@@ -3,7 +3,7 @@ const vue = require('@vitejs/plugin-vue');
 const path = require('path');
 const { ensureFileSync } = require('fs-extra');
 const { writeFileSync } = require('fs');
-const pkgRoot = require('pkg-dir').sync();
+const pkgRoot = require('pkg-dir').sync(process.cwd());
 
 const viteConfig = {
     configFile: false,
