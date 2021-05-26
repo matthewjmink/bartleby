@@ -10,15 +10,16 @@ const rollupReplace = require('@rollup/plugin-replace');
 const { createFilter } = require('@rollup/pluginutils');
 const { nodeResolve } = require('@rollup/plugin-node-resolve');
 const { getSnippets } = require('./db');
-const pkgRoot = require('pkg-dir').sync(process.cwd());
+const {
+    pkgRoot,
+    websiteRoot,
+    pagesRoot,
+    includesRoot,
+} = require('./utils');
+const { saveFile, copyDir, copyFile } = require('./file-service');
 
 const projectConfigPath = path.join(pkgRoot, 'bartleby.config.js');
 const projectConfig = fs.existsSync(projectConfigPath) ? require(projectConfigPath) : {};
-
-const websiteRoot = path.join(pkgRoot, 'src');
-const pagesRoot = path.join(websiteRoot, 'pages');
-const includesRoot = path.join(websiteRoot, 'includes');
-const outputRoot = path.join(pkgRoot, 'dist');
 
 const globalData = glob(path.join(pagesRoot, '_data', '*.js')).reduce((mapped, file) => ({
     ...mapped,
@@ -34,11 +35,11 @@ const getPagePathMeta = (inputPath) => {
     const url = (name !== 'index' && name !== parentDir)
         ? path.join(path.sep, dir, name)
         : path.join(path.sep, dir);
-    const outputPath = path.join(outputRoot, url, 'index.html');
+    const outputPath = path.join(url, 'index.html');
     const slug = url.slice(1).replace(/\s/g, '').split(path.sep).join('-') || 'home';
     const jsInputPath = (jsPath => (fs.existsSync(jsPath) ? jsPath : undefined))(path.join(pagesRoot, dir, `${name}.js`));
     const js = jsInputPath ? path.join(url, `${slug.split('-').pop()}.js`) : undefined;
-    const jsOutputPath = jsInputPath ? path.join(outputRoot, js) : undefined;
+    const jsOutputPath = jsInputPath ? js : undefined;
 
     return {
         inputPath,
@@ -136,8 +137,7 @@ const buildPages = () => {
             page,
             content: compiledTemplate,
         });
-        fs.ensureFileSync(page.outputPath);
-        fs.writeFileSync(page.outputPath, compiledPage);
+        saveFile(page.outputPath, compiledPage);
     });
 };
 
@@ -173,7 +173,7 @@ const buildJs = async () => {
     }))).replace(/"ROUTER_COMPONENT:([^"]*)"/g, '$1');
     const rollupRouterJsFilter = createFilter(routerPagesWithJs.map(({ js }) => js));
 
-    const bundle = await rollup.rollup({
+    const mainBundle = await rollup.rollup({
         input: path.join(websiteRoot, 'main.js'),
         plugins: [
             nodeResolve(),
@@ -189,34 +189,27 @@ const buildJs = async () => {
             }
         ],
     });
+    const { output: [{ code: mainJs }] } = await mainBundle.generate({ format: 'iife' });
 
-    await bundle.write({
-        format: 'iife',
-        file: path.join(outputRoot, 'main.js')
-    });
+    saveFile('main.js', mainJs);
 
     // TODO: Use Promise.all() to build these concurrently
     routerPagesWithJs.forEach(async ({ outputPath, slug, js }) => {
         const bundle = await rollup.rollup({ input: js });
+        const { output: [{ code: pageJs }] } = await bundle.generate({ format: 'iife' });
 
-        await bundle.write({
-            format: 'iife',
-            file: path.join(path.dirname(outputPath), `${path.basename(slug)}.js`),
-        });
+        await saveFile(path.join(path.dirname(outputPath), `${path.basename(slug)}.js`), pageJs);
         await bundle.close();
     });
 
     // closes the bundle
-    await bundle.close();
+    await mainBundle.close();
 }
 
 const copyStaticAssets = async () => {
-    const outputAssets = path.join(outputRoot, 'assets');
-    if (fs.existsSync(outputAssets)) {
-        await fs.emptyDir(outputAssets);
-    }
-    fs.copySync(path.join(websiteRoot, 'assets', 'images'), path.join(outputAssets, 'images'), { recursive: true });
-    fs.copySync(path.join(websiteRoot, 'assets', 'favicon.ico'), path.join(outputRoot, 'favicon.ico'));
+    const assetsRoot = path.join(websiteRoot, 'assets');
+    copyDir(path.join(assetsRoot, 'images'), path.join('assets', 'images'));
+    copyFile(path.join(assetsRoot, 'favicon.ico'), 'favicon.ico');
 }
 
 const getBuildData = () => {
