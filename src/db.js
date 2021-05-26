@@ -3,18 +3,10 @@ const {
     DynamoDB,
 } = require('@aws-sdk/client-dynamodb');
 const { unmarshall } = require("@aws-sdk/util-dynamodb");
-
-// TODO: Get these from env vars
-const { AWS_REGION, AWS_IAM_ACCESS_KEY, AWS_IAM_SECRET } = process.env;
+const awsClientConfig = require('./aws-client.config');
 
 // Create DynamoDB service object
-const dbclient = new DynamoDB({
-    region: AWS_REGION,
-    credentials: {
-        accessKeyId: AWS_IAM_ACCESS_KEY,
-        secretAccessKey: AWS_IAM_SECRET,
-    }
-});
+const dbclient = new DynamoDB(awsClientConfig);
 const snippetsTableName = 'Snippets';
 let setup;
 
