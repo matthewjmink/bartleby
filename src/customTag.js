@@ -20,6 +20,12 @@ const addCustomTag = (env, name, fn) => {
 
             parser.advanceAfterBlockEnd(tok.value);
 
+            /**
+             * TODO: Allow block level tags that have an open and close tag, allowing content
+             * The following is a start...
+             *      const body = parser.parseUntilBlocks('error', `end${name}`);
+             *      parser.advanceAfterBlockEnd();
+             */
             return new nodes.CallExtension(this, "run", args);
         };
 
