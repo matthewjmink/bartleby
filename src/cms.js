@@ -25,8 +25,8 @@ const serveCMS = async (websiteData) => {
 };
 
 const buildCMS = async (websiteData) => {
-    const buildResult = await build(getViteConfig(websiteData));
-    await Promise.all(buildResult.output.map(({ fileName, type, source, code = source }) => saveFile(path.join('admin', fileName), code)));
+    const buildResult = await build(getViteConfig(websiteData, false));
+    await Promise.all(buildResult.output.map(({ fileName, source, code = source }) => saveFile(path.join('admin', fileName), code)));
 };
 
 module.exports = {
