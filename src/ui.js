@@ -15,6 +15,7 @@ const {
     websiteRoot,
     pagesRoot,
     includesRoot,
+    outputRoot
 } = require('./utils');
 const fileService = require('./file-service');
 

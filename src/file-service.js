@@ -24,10 +24,10 @@ const copyToFileSystem = async (inputPath, outputPath, { recursive = false } = {
 };
 
 module.exports = {
-    saveFile: (...args) => {
-        if (isLambda()) return saveToS3(...args);
+    saveFile: (outputPath, content) => {
+        if (isLambda()) return saveToS3(outputPath, content);
 
-        return saveToFileSystem(...args);
+        return saveToFileSystem(outputPath, content);
     },
     copyDir: (inputPath, outputPath) => {
         if (isLambda()) return copyToS3(inputPath, outputPath);
