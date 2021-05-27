@@ -40,10 +40,11 @@
 </template>
 
 <script>
-import data from '../data';
 import Editor from "@tinymce/tinymce-vue";
 import Icon from "../components/Icon.vue";
 import { captureSaveKey, isClickOutside } from "../utils";
+
+const data = buildData;
 
 const formatLinkDialog = () => {
     const dialog = document.querySelector('.tox-dialog');

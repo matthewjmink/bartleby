@@ -24,14 +24,13 @@
 </template>
 
 <script>
-import data from '../data';
 import Icon from "../components/Icon.vue";
 
 export default {
     name: 'Pages',
     components: { Icon },
     setup: () => ({
-        pages: [...data.pages].sort(({ slug }) => (slug === 'home' ? -1 : 0)),
+        pages: [...buildData.pages].sort(({ slug }) => (slug === 'home' ? -1 : 0)),
     }),
 }
 </script>
