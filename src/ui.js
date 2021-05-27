@@ -33,9 +33,7 @@ const snippetsByKey = new Map();
 const getPagePathMeta = (inputPath) => {
     const { dir, name } = path.parse(inputPath.replace(path.join(pagesRoot, '/'), ''));
     const parentDir = path.basename(dir);
-    const url = (name !== 'index' && name !== parentDir)
-        ? path.join(path.sep, dir, name)
-        : path.join(path.sep, dir);
+    const url = path.join('/', ...(name !== 'index' && name !== parentDir ? [dir, name] : [dir]), '/');
     const outputPath = path.join(url, 'index.html');
     const slug = url.slice(1).replace(/\s/g, '').split(path.sep).join('-') || 'home';
     const jsInputPath = (jsPath => (fs.existsSync(jsPath) ? jsPath : undefined))(path.join(pagesRoot, dir, `${name}.js`));

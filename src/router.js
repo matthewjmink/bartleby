@@ -4,8 +4,11 @@ const routes = process.env.BARTLEBY_ROUTES || [];
 const routerView = document.querySelector('#content');
 let currentRoute;
 
+const cleanPath = (path = '/') => (path.slice(-1) === '/' ? path : `${path}/`);
+
 function getRoute(path) {
-    return routes.find(route => route.path === path);
+    const cleanedPath = cleanPath(path);
+    return routes.find(route => cleanPath(route.path) === cleanedPath);
 }
 
 function loadRoute(route) {
@@ -36,7 +39,10 @@ function loadRoute(route) {
 
 export function goTo(path) {
     const route = getRoute(path);
-    history.pushState(null, null, path);
+
+    if (!route) return;
+
+    history.pushState(null, null, route.path);
     loadRoute(route);
 }
 
